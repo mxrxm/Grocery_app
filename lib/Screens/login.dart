@@ -168,10 +168,17 @@ class _loginState extends State<login> {
                  
                  username_value 
                  password_value */
-                
+                /*
                   Navigator.push(context,
                         MaterialPageRoute(builder: (context) => ExploreScreen()));
-                 
+                 */
+                Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => ExploreScreen(username: username_value.text),
+  ),
+);
+
 
                  
                  

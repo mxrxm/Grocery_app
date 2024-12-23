@@ -114,12 +114,20 @@ class _sign_upState extends State<sign_up> {
                         suffixIcon: togglepassword(),
                         hintStyle: const TextStyle(
                             color: Color.fromARGB(255, 155, 158, 156))),
-                            validator:((value) => value!.length < 3 ? 'password should be at least 3 characters':null) ,
+                      validator: ((value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a password';
+                        }
+                        if (value.length<3) {
+                          return 'password must be more than 3 charcters';
+                        }
+                        return null; // Input is valid
+                      })
                   )),
                   const SizedBox(
               height: 19,
             ),
-            
+
              // Confirm password input field with visibility toggle
             Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25.0),
@@ -143,7 +151,7 @@ class _sign_upState extends State<sign_up> {
                               if(value.isEmpty) return "password should be at least 3 characters";
                               return null;
                           }),
-                          
+
                 )),
             const SizedBox(
               height: 19,
@@ -236,35 +244,74 @@ class _sign_upState extends State<sign_up> {
             const SizedBox(
               height: 50,
             ),
-            
+
                ],
              ),
-              
+
            ),
-            
-            
+
+
             // Sign Up button
             ElevatedButton(
-                onPressed: () async{
+        onPressed: () async {
+              // Fetch the list of usernames from the database
+              List<Map<String, dynamic>> list = await userdb.readData("select (username) from 'User_data';");
+              bool userExists = false; // Flag to track if the user exists
 
-                  if( _fromkey.currentState!.validate()) {
+              // Check if the username already exists in the list
+              for (var user in list) {
+                if (user['username'] == username_value.text) {
+                  userExists = true;
+                  break; // Exit the loop early if the user is found
+                }
+              }
 
-                    /**********************************HERE***********************************************/
+              if (userExists) {
+                // Show an error dialog if the user already exists
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text("ERROR"),
+                      content: const Text('User already exists!'),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(); // Close the dialog
+                          },
+                          child: const Text("OK"),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              } else {
+                // If the username doesn't exist, validate the form and insert the user
+                if (_fromkey.currentState!.validate()) {
+                    // Insert the user into the database
                     int response = await userdb.insertUser(
-                        username_value.text, password_value.text,
-                        phone_value.text, email_value.text,
-                        address_value.text);
+                      username_value.text,
+                      password_value.text,
+                      phone_value.text,
+                      email_value.text,
+                      address_value.text,
+                    );
                     print("Inserted with response: $response");
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => login()));
-                  }
-                  else{
 
-                  }
-                 
-                 
-                 
-                },
+                    // Navigate to the login page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => login()),
+                    );
+                }
+              }
+
+
+
+
+
+
+  },
                 style: ElevatedButton.styleFrom(
                   fixedSize: const Size(300, 53),
                   visualDensity: VisualDensity.compact,
@@ -325,7 +372,7 @@ class _sign_upState extends State<sign_up> {
                     padding: const EdgeInsets.all(10),
                     //minimumSize: const Size.fromHeight(50),
                   ),
-                  child: const 
+                  child: const
                       Center(
                           child: Text(
                         "Login",

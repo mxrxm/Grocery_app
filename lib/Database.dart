@@ -172,6 +172,20 @@ class ItemDb extends Db {
         FOREIGN KEY (item_cat) REFERENCES CATEGORIES (Cat_Id)
       );
     ''');
+ // Create CART table
+  await db.execute('''
+    CREATE TABLE CART (
+  cart_id INTEGER PRIMARY KEY NOT NULL, 
+    item_name TEXT NOT NULL,
+    item_price REAL NOT NULL,
+    item_quantity INTEGER NOT NULL,
+    item_img TEXT,
+    username TEXT NOT NULL 
+);
+
+  ''');
+
+
     print("====================Item database created===================");
      insertInitialData();
   }
@@ -441,4 +455,119 @@ class ItemDb extends Db {
       WHERE CATEGORIES.Cat_name='$category';
     ''');
   }
+/*
+Future<int> addToCart(String itemName, double itemPrice, int itemQuantity, String itemImg) async {
+  Database? myDb = await db;
+
+  // Get the current max cart_id from the CART table
+  final List<Map<String, dynamic>> result = await myDb!.rawQuery('SELECT MAX(cart_id) as maxId FROM CART');
+
+  // If the table is empty, start cart_id from 1
+  int newCartId = (result.first['maxId'] ?? 0) + 1;
+
+  // Print the new cart_id for debugging
+  print("New cart_id to be inserted: $newCartId");
+
+  // Insert the new item with the unique cart_id
+  return await myDb.rawInsert('''
+    INSERT INTO CART (cart_id, item_name, item_price, item_quantity, item_img)
+    VALUES (?, ?, ?, ?, ?);
+  ''', [newCartId, itemName, itemPrice, itemQuantity, itemImg]);
+}
+*/
+
+Future<int> addToCart(
+    String itemName, 
+    double itemPrice, 
+    int itemQuantity, 
+    String itemImg, 
+    String username // Added username parameter
+) async {
+  Database? myDb = await db;
+
+  // Get the current max cart_id from the CART table
+  final List<Map<String, dynamic>> result = await myDb!.rawQuery('SELECT MAX(cart_id) as maxId FROM CART');
+
+  // If the table is empty, start cart_id from 1
+  int newCartId = (result.first['maxId'] ?? 0) + 1;
+
+  // Print the new cart_id for debugging
+  print("New cart_id to be inserted: $newCartId");
+
+  // Insert the new item with the unique cart_id and username
+  return await myDb.rawInsert('''
+    INSERT INTO CART (cart_id, item_name, item_price, item_quantity, item_img, username)
+    VALUES (?, ?, ?, ?, ?, ?);
+  ''', [newCartId, itemName, itemPrice, itemQuantity, itemImg, username]); // Pass username in the values
+}
+
+
+Future<List<Map<String, dynamic>>> getCartItems(String username) async {
+  Database? myDb = await db;
+
+  // Fetch items from the CART table where username matches
+  return await myDb!.rawQuery(
+    'SELECT * FROM CART WHERE username = ?',
+    [username] // Pass the username as a parameter to the query
+  );
+}
+Future<int> removeItemFromCart(int cartId, String username) async {
+  Database? myDb = await db;
+
+  // Delete the item from the CART table based on cart_id and username
+  return await myDb!.rawDelete(
+    'DELETE FROM CART WHERE cart_id = ? AND username = ?',
+    [cartId, username]
+  );
+}
+Future<void> clearCart(String username) async {
+  Database? myDb = await db;
+
+  // Delete all items from the CART table for the given username
+  await myDb!.delete(
+    'CART',
+    where: 'username = ?',
+    whereArgs: [username],
+  );
+}
+Future<double> getTotalPrice(String username) async {
+  final List<Map<String, dynamic>> items = await getCartItems(username);
+
+  double total = 0.0;
+  for (var item in items) {
+    total += item['item_price'] * item['item_quantity'];
+  }
+
+  return total;
+}
+
+/*
+Future<int> removeItemFromCart(int cartId) async {
+  Database? myDb = await db;
+  return await myDb!.rawDelete('DELETE FROM CART WHERE cart_id = ?', [cartId]);
+}
+
+
+
+Future<List<Map<String, dynamic>>> getCartItems() async {
+  Database? myDb = await db;
+  return await myDb!.rawQuery('SELECT * from CART');
+}
+Future<void> clearCart() async {
+  Database? myDb = await db;
+  await myDb!.delete('CART');
+}
+
+Future<double> getTotalPrice() async {
+    final List<Map<String, dynamic>> items = await getCartItems();
+    
+    double total = 0.0;
+    for (var item in items) {
+      total += item['item_price'] * item['item_quantity'];
+    }
+    
+    return total;
+  }
+*/
+  
 }

@@ -1,35 +1,46 @@
 import 'package:flutter/material.dart';
 import '../Database.dart';
+import 'package:grocery_app/Screens/cart.dart';
 
 class Items extends StatelessWidget {
-    Items( this.category, {super.key});
-final String category;
+  final String category;
+  final String username;
+  Items({required this.category, required this.username}){
+    print("ExploreScreen initialized with username: $username");
+  }
+  
   ItemDb db = ItemDb();
 
   Future<List<Widget>> buildProductList() async {
     final List<Map<String, dynamic>> products = await db.getItems(category);
-    // Map each product to a Widget (e.g., ProductCard)
     return products.map((product) {
       return ProductCard(
         image: product['image'],      // Path to the image
         title: product['title'],      // Product title
         quantity: product['quantity'], // Quantity description
-        price:  product['price'].toString() +".LE",      // Price
+        price: product['price'],      // Price
+        onAddToCart: () {
+          db.addToCart(
+            product['title'],
+            product['price'],
+            1, // Default quantity to add is 1
+            product['image'],
+            username
+          );
+        },
       );
     }).toList();
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-      // Light background color
       body: Padding(
         padding: const EdgeInsets.all(15.0),
         child: ListView(
           children: [
-            // Row of location
+            // Location Row
             const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -43,7 +54,7 @@ final String category;
             ),
             const SizedBox(height: 15),
 
-            // Container of search bar
+            // Search Bar
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
               decoration: BoxDecoration(
@@ -68,7 +79,7 @@ final String category;
             ),
             const SizedBox(height: 15),
 
-            // Container of offer banner
+            // Offer Banner
             Container(
               height: 120,
               padding: const EdgeInsets.all(10),
@@ -109,7 +120,7 @@ final String category;
             ),
             const SizedBox(height: 20),
 
-            // Row of exclusive order
+            // Exclusive Order Row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -134,26 +145,22 @@ final String category;
             ),
             const SizedBox(height: 15),
 
-            // Row of products
+            // Product List
             FutureBuilder<List<Widget>>(
               future: buildProductList(),
-              // Fetch the product list asynchronously
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                      child: CircularProgressIndicator()); // Loading indicator
+                  return const Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasError) {
-                  return Center(child: Text(
-                      'Error: ${snapshot.error}')); // Error handling
+                  return Center(child: Text('Error: ${snapshot.error}'));
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(
-                      child: Text('No products found')); // No products case
+                  return const Center(child: Text('No products found'));
                 } else {
                   return Wrap(
-                    spacing: 10, // Horizontal space between children
-                    runSpacing: 10, // Vertical space between rows
+                    spacing: 10,
+                    runSpacing: 10,
                     alignment: WrapAlignment.spaceBetween,
-                    children: snapshot.data!, // Use the list of ProductCards
+                    children: snapshot.data!,
                   );
                 }
               },
@@ -161,23 +168,35 @@ final String category;
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => CartScreen(username: username),
+  ),
+
+);
+        },
+        child: const Icon(Icons.shopping_cart),
+      ),
     );
   }
-
 }
 
 class ProductCard extends StatelessWidget {
   final String image;
   final String title;
   final String quantity;
-  final String price;
-
+  final double price;
+  final VoidCallback onAddToCart;
 
   const ProductCard({
     required this.image,
     required this.title,
     required this.quantity,
     required this.price,
+    required this.onAddToCart,
   });
 
   @override
@@ -209,7 +228,7 @@ class ProductCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                price.toString(),
+                '$price LE',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
@@ -221,9 +240,7 @@ class ProductCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: IconButton(
-                  onPressed: () {
-                    // Add function
-                  },
+                  onPressed: onAddToCart,
                   icon: const Icon(Icons.add, color: Colors.white),
                 ),
               ),
@@ -233,5 +250,4 @@ class ProductCard extends StatelessWidget {
       ),
     );
   }
-
 }

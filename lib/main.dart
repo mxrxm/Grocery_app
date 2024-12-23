@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:grocery_app/Screens//splash_screen.dart';
-
+import 'package:code_uml/code_uml.dart';
 // Entry point of the Flutter application
 void main() {
   runApp(const MyApp());

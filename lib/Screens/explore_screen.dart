@@ -184,7 +184,6 @@
 //     );
 //   }
 // }
-
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:grocery_app/Screens/Items.dart';
@@ -205,6 +204,13 @@ List<Color> gridColors = [
 ];
 
 class ExploreScreen extends StatelessWidget {
+  final String username; // Added username parameter
+
+  ExploreScreen({Key? key, required this.username}) : super(key: key)
+  {
+    print("ExploreScreen initialized with username: $username");
+  }
+
   final List<CategoryItem> categoryItemsDemo = [
     CategoryItem(
       name: "Fresh Fruits & Vegetables",
@@ -249,14 +255,22 @@ class ExploreScreen extends StatelessWidget {
   Widget getHeader() {
     return Column(
       children: [
-        SizedBox(
-          height: 20,
-        ),
+        SizedBox(height: 20),
         Center(
-          child: AppText(
-            text: "Find Products",
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+          child: Column(
+            children: [
+              AppText(
+                text: "Welcome, $username!",
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+              SizedBox(height: 5),
+              AppText(
+                text: "Find Products",
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ],
           ),
         ),
         Padding(
@@ -295,15 +309,12 @@ class ExploreScreen extends StatelessWidget {
   }
 
   void onCategoryItemClicked(BuildContext context, String categoryName) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (BuildContext context) {
-           // return ;
-            return Items(categoryName);
-          },
-        ),
-      );
-
-    }
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (BuildContext context) {
+          return Items(category: categoryName, username: username);
+        },
+      ),
+    );
   }
-
+}
